@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Architecture of Intentionality</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;family=Tektur:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           FIXED 16:9 STAGE: MANDATORY BASE STYLES
+           =========================================== */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        .deck-viewport {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .deck-stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            transform-origin: 0 0;
+            background: #0A0E27;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 80px 100px;
+            box-sizing: border-box;
+            background: #0A0E27;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            z-index: 1;
+        }
+
+        img, video, svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* ===========================================
+           8-BIT ORBIT THEME VARIABLES
+           =========================================== */
+        :root {
+            --dark-void: #0A0E27;
+            --deep-navy: #0F1B3D;
+            --neon-cyan: #5EDCF4;
+            --neon-pink: #F0A6CA;
+            --neon-yellow: #F4D03F;
+            --soft-lavender: #E2D5F2;
+            --white: #FFFFFF;
+        }
+
+        /* Ambient overlays */
+        .deck-viewport::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(10, 14, 39, 0.08) 2px, rgba(10, 14, 39, 0.08) 4px);
+            pointer-events: none;
+            z-index: 50;
+            mix-blend-mode: multiply;
+        }
+
+        .deck-viewport::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(10, 14, 39, 0.45) 100%);
+            pointer-events: none;
+            z-index: 51;
+        }
+
+        /* Grid Background on Slides */
+        .slide::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(94, 220, 244, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(94, 220, 244, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Starfield elements on dark backgrounds */
+        .starfield {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(1px 1px at 100px 150px, var(--neon-cyan) 100%, transparent),
+                radial-gradient(2px 2px at 400px 300px, var(--neon-pink) 100%, transparent),
+                radial-gradient(1.5px 1.5px at 800px 200px, var(--neon-yellow) 100%, transparent),
+                radial-gradient(1px 1px at 1200px 600px, var(--neon-cyan) 100%, transparent),
+                radial-gradient(2px 2px at 1600px 800px, var(--neon-pink) 100%, transparent),
+                radial-gradient(1.5px 1.5px at 1400px 150px, var(--neon-yellow) 100%, transparent);
+            opacity: 0.4;
+        }
+
+        /* Colored surface registers */
+        .slide.pink-register {
+            background: var(--neon-pink);
+            color: var(--deep-navy);
+        }
+        .slide.pink-register::before {
+            background-image: 
+                linear-gradient(rgba(15, 27, 61, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 27, 61, 0.08) 1px, transparent 1px);
+        }
+        
+        .slide.cyan-register {
+            background: var(--neon-cyan);
+            color: var(--deep-navy);
+        }
+        .slide.cyan-register::before {
+            background-image: 
+                linear-gradient(rgba(15, 27, 61, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 27, 61, 0.08) 1px, transparent 1px);
+        }
+
+        .slide.lavender-register {
+            background: var(--soft-lavender);
+            color: var(--deep-navy);
+        }
+        .slide.lavender-register::before {
+            background-image: 
+                linear-gradient(rgba(15, 27, 61, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 27, 61, 0.08) 1px, transparent 1px);
+        }
+
+        /* ===========================================
+           TYPOGRAPHY & RETRO SYSTEM
+           =========================================== */
+        h1, h2, h3, .title-display {
+            font-family: 'Tektur', cursive;
+            margin: 0;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Cover-scale display with 3D text shadow */
+        .title-display {
+            font-size: 110px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 0.04em;
+            color: var(--white);
+            text-shadow: 4px 4px 0 var(--neon-yellow), 8px 8px 0 var(--deep-navy);
+        }
+        .pink-register .title-display,
+        .cyan-register .title-display,
+        .lavender-register .title-display {
+            color: var(--deep-navy);
+            text-shadow: 4px 4px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .slide-headline {
+            font-size: 56px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: 0.02em;
+            color: var(--neon-cyan);
+            margin-bottom: 25px;
+            text-shadow: 3px 3px 0 var(--deep-navy);
+        }
+        .pink-register .slide-headline,
+        .cyan-register .slide-headline,
+        .lavender-register .slide-headline {
+            color: var(--deep-navy);
+            text-shadow: none;
+        }
+
+        .lead-text {
+            font-size: 24px;
+            line-height: 1.6;
+            color: var(--soft-lavender);
+            max-width: 1000px;
+            z-index: 2;
+        }
+        .pink-register .lead-text,
+        .cyan-register .lead-text,
+        .lavender-register .lead-text {
+            color: var(--deep-navy);
+        }
+
+        /* Monospace eyebrows and chrome labels */
+        .label-eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--neon-pink);
+            margin-bottom: 15px;
+            display: block;
+            z-index: 2;
+        }
+        .pink-register .label-eyebrow,
+        .cyan-register .label-eyebrow,
+        .lavender-register .label-eyebrow {
+            color: var(--deep-navy);
+            font-weight: 700;
+        }
+
+        .label-pill {
+            background: var(--deep-navy);
+            color: var(--neon-yellow);
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-family: 'Space Mono', monospace;
+            border: 2px solid var(--neon-yellow);
+            box-shadow: 3px 3px 0 var(--deep-navy);
+        }
+        .pink-register .label-pill,
+        .cyan-register .label-pill,
+        .lavender-register .label-pill {
+            background: var(--white);
+            color: var(--deep-navy);
+            border-color: var(--deep-navy);
+            box-shadow: 3px 3px 0 var(--deep-navy);
+        }
+
+        .slide-chrome, .slide-foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--neon-cyan);
+            border-bottom: 2px solid var(--deep-navy);
+            padding-bottom: 12px;
+            z-index: 2;
+        }
+        .pink-register .slide-chrome, .cyan-register .slide-chrome, .lavender-register .slide-chrome,
+        .pink-register .slide-foot, .cyan-register .slide-foot, .lavender-register .slide-foot {
+            color: var(--deep-navy);
+            border-color: var(--deep-navy);
+        }
+
+        .slide-foot {
+            border-bottom: none;
+            border-top: 2px solid var(--deep-navy);
+            padding-bottom: 0;
+            padding-top: 12px;
+            color: var(--soft-lavender);
+        }
+
+        .catalogue-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 16px;
+            letter-spacing: 0.1em;
+            color: var(--neon-pink);
+            position: absolute;
+            left: 100px;
+            top: 50px;
+            z-index: 2;
+        }
+        .pink-register .catalogue-num,
+        .cyan-register .catalogue-num,
+        .lavender-register .catalogue-num {
+            color: var(--deep-navy);
+            font-weight: 700;
+        }
+
+        /* Hard offset pixel-bracket containers */
+        .pixel-card {
+            background: var(--deep-navy);
+            border: 2px solid var(--neon-cyan);
+            padding: 32px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 6px 6px 0 var(--neon-pink);
+        }
+        .pink-register .pixel-card,
+        .cyan-register .pixel-card,
+        .lavender-register .pixel-card {
+            background: var(--white);
+            border-color: var(--deep-navy);
+            box-shadow: 6px 6px 0 var(--deep-navy);
+        }
+
+        /* L-bracket corner markings */
+        .pixel-card::before, .pixel-card::after,
+        .action-box::before, .action-box::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 4px solid var(--neon-yellow);
+            pointer-events: none;
+        }
+        .pixel-card::before, .action-box::before {
+            top: -4px;
+            left: -4px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .pixel-card::after, .action-box::after {
+            bottom: -4px;
+            right: -4px;
+            border-left: none;
+            border-top: none;
+        }
+        .pink-register .pixel-card::before, .pink-register .pixel-card::after,
+        .cyan-register .pixel-card::before, .cyan-register .pixel-card::after,
+        .lavender-register .pixel-card::before, .lavender-register .pixel-card::after {
+            border-color: var(--deep-navy);
+        }
+
+        /* Lists with Square Pixel bullet points */
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+            margin: 30px 0;
+            z-index: 2;
+            position: relative;
+        }
+
+        .bullet-item {
+            font-size: 20px;
+            line-height: 1.6;
+            color: var(--white);
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 20px;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+        .pink-register .bullet-item, .cyan-register .bullet-item, .lavender-register .bullet-item {
+            color: var(--deep-navy);
+        }
+
+        .bullet-item::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 10px;
+            height: 10px;
+            background: var(--neon-cyan);
+            box-shadow: 2px 2px 0 var(--deep-navy);
+        }
+        .pink-register .bullet-item::before,
+        .cyan-register .bullet-item::before,
+        .lavender-register .bullet-item::before {
+            background: var(--deep-navy);
+            box-shadow: 2px 2px 0 rgba(255,255,255,0.7);
+        }
+
+        .bullet-title {
+            font-weight: 700;
+            color: var(--neon-yellow);
+        }
+        .pink-register .bullet-title,
+        .cyan-register .bullet-title,
+        .lavender-register .bullet-title {
+            color: var(--deep-navy);
+            text-decoration: underline;
+        }
+
+        .bullet-desc {
+            color: var(--soft-lavender);
+        }
+        .pink-register .bullet-desc, .cyan-register .bullet-desc, .lavender-register .bullet-desc {
+            color: var(--deep-navy);
+        }
+
+        /* Mindset interactive box */
+        .action-box {
+            background: rgba(244, 208, 63, 0.08);
+            border: 2px dashed var(--neon-yellow);
+            padding: 24px 30px;
+            margin-top: 30px;
+            position: relative;
+        }
+        .pink-register .action-box, .cyan-register .action-box, .lavender-register .action-box {
+            background: rgba(15, 27, 61, 0.05);
+            border-color: var(--deep-navy);
+        }
+
+        .action-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--neon-yellow);
+            margin-bottom: 6px;
+        }
+        .pink-register .action-label, .cyan-register .action-label, .lavender-register .action-label {
+            color: var(--deep-navy);
+            font-weight: 700;
+        }
+
+        .action-text {
+            font-size: 22px;
+            color: var(--white);
+            font-family: 'Chakra Petch', sans-serif;
+        }
+        .pink-register .action-text, .cyan-register .action-text, .lavender-register .action-text {
+            color: var(--deep-navy);
+        }
+
+        /* Layout structure */
+        .slide-body {
+            display: flex;
+            flex-grow: 1;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0;
+            z-index: 2;
+            position: relative;
+        }
+
+        .left-col {
+            flex: 1.2;
+            max-width: 1100px;
+        }
+
+        .right-col {
+            flex: 0.8;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding-left: 50px;
+        }
+
+        /* Interaction Panel / CRT frames */
+        .qr-card {
+            border: 2px solid var(--neon-cyan);
+            background: var(--deep-navy);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 20px;
+            max-width: 500px;
+            box-shadow: 8px 8px 0 var(--neon-cyan);
+        }
+        .pink-register .qr-card,
+        .cyan-register .qr-card,
+        .lavender-register .qr-card {
+            background: var(--white);
+            border-color: var(--deep-navy);
+            box-shadow: 8px 8px 0 var(--deep-navy);
+        }
+
+        .qr-img {
+            width: 280px;
+            height: 280px;
+            object-fit: contain;
+            border: 3px solid var(--deep-navy);
+            background: #fff;
+        }
+
+        .qr-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qr-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--neon-yellow);
+            font-family: 'Tektur', cursive;
+        }
+        .pink-register .qr-title,
+        .cyan-register .qr-title,
+        .lavender-register .qr-title {
+            color: var(--deep-navy);
+        }
+
+        .qr-desc {
+            font-size: 16px;
+            color: var(--white);
+            line-height: 1.5;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+        .pink-register .qr-desc,
+        .cyan-register .qr-desc,
+        .lavender-register .qr-desc {
+            color: var(--deep-navy);
+        }
+
+        .stub-rule {
+            width: 48px;
+            height: 8px;
+            background: var(--neon-cyan);
+            margin-bottom: 25px;
+            box-shadow: 4px 4px 0 var(--deep-navy);
+        }
+        .pink-register .stub-rule,
+        .cyan-register .stub-rule,
+        .lavender-register .stub-rule {
+            background: var(--deep-navy);
+            box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        /* Controls overlay */
+        .controls-overlay {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--deep-navy);
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 4px 4px 0 var(--neon-pink);
+            padding: 8px 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            color: var(--neon-cyan);
+            letter-spacing: 0.05em;
+            transition: opacity 0.5s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .controls-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            padding: 5px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .nav-btn:hover {
+            color: var(--neon-yellow);
+        }
+
+        /* Hollow Square Nav dots on right side */
+        .nav-dots-rail {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--neon-cyan);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .nav-dot.active {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 8px var(--neon-cyan);
+        }
+
+        /* ===========================================
+           INLINE EDITING SYSTEM
+           =========================================== */
+        .edit-hotzone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 10000;
+            cursor: pointer;
+        }
+        .edit-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10001;
+            background: var(--neon-pink);
+            color: var(--deep-navy);
+            border: 2px solid var(--deep-navy);
+            box-shadow: 4px 4px 0 var(--neon-yellow);
+            padding: 10px 15px;
+            font-family: 'Space Mono', monospace;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .edit-toggle.show,
+        .edit-toggle.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        [contenteditable="true"] {
+            outline: 2px dashed var(--neon-yellow) !important;
+            background: rgba(244, 208, 63, 0.05);
+            padding: 2px 4px;
+        }
+
+        .export-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10002;
+            background: var(--deep-navy);
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 4px 4px 0 var(--neon-pink);
+            padding: 10px 15px;
+            font-family: 'Space Mono', monospace;
+            cursor: pointer;
+            display: none;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .edit-mode .export-btn {
+            display: block;
+        }
+    </style>
+</head>
+<body class="edit-mode">
+    <div class="deck-viewport">
+        <main class="deck-stage" id="deckStage">
+            
+            <!-- Slide 1: Cover Page (Pink Register) -->
+            <section class="slide pink-register active" data-label="Cover" style="justify-content: center; align-items: center; text-align: center;">
+                <div class="starfield"></div>
+                <span class="catalogue-num">[session.01]</span>
+                <div class="content-container" style="align-items: center; justify-content: center; width: 100%;">
+                    <div class="stub-rule" style="margin-left: auto; margin-right: auto;"></div>
+                    <h1 class="title-display" style="text-align: center; margin-bottom: 30px;">the architecture<br>of intentionality</h1>
+                    <p class="lead-text" style="font-size: 32px; font-weight: 500; max-width: 900px; margin: 0 auto; line-height: 1.5; color: var(--deep-navy);">Constructing your pathway to well-being and career success in Canada.</p>
+                </div>
+            </section>
+
+            <!-- Slide 2: The Audacity of Your Journey (Cyan Register) -->
+            <section class="slide cyan-register" data-label="Journey">
+                <div class="starfield"></div>
+                <span class="catalogue-num">[journey.02]</span>
+                <div class="content-container" style="justify-content: flex-start; margin-top: 100px;">
+                    <span class="label-eyebrow">deliberate architecture</span>
+                    <h2 class="slide-headline">the audacity of your journey</h2>
+                    <ul class="bullet-list">
+                        <li class="bullet-item">
+                            Your meticulously engineered life transition
+                        </li>
+                        <li class="bullet-item">
+                            The tedious paperwork and uncertainty stress
+                        </li>
+                        <li class="bullet-item">
+                            The <em>INTENTIONALITY</em> to cross oceans.
+                        </li>
+                    </ul>
+                    <div class="action-box">
+                        <div class="action-label">Mindset Check</div>
+                        <div class="action-text">"Close your eyes for a second and think..."</div>
+                    </div>
+                </div>
+                <div></div>
+            </section>
+
+            <!-- Slide 3: A Shared Horizon (Dark void) -->
+            <section class="slide" data-label="Horizon">
+                <div class="starfield"></div>
+                <div class="slide-chrome">
+                    <span>A Shared Horizon</span>
+                    <span class="label-pill">03</span>
+                </div>
+                <div class="slide-body">
+                    <div class="left-col">
+                        <span class="label-eyebrow">mission &amp; alignment</span>
+                        <h2 class="slide-headline">a shared horizon</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-title">Who am I?:</span> I'm Benjamin Sanchez, Recent Graduate / Financial Planning and Wealth Management / FinTech Architect
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">My Core mission today:</span> Helping you "post-graduates" to identify your competitive advantages.
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">Our shared ground:</span> Newcomers to Canada, resilience and adaptability.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="right-col" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
+                        <div class="pixel-card" style="padding: 10px; box-shadow: 4px 4px 0 var(--neon-cyan); border-color: var(--neon-cyan); max-height: 300px; display: flex; align-items: center; justify-content: center;">
+                            <img src="img/myself.png" alt="Myself" style="max-height: 260px; object-fit: contain; display: block;">
+                        </div>
+                        <div class="pixel-card" style="padding: 10px; box-shadow: 4px 4px 0 var(--neon-pink); border-color: var(--neon-pink); width: 100%; max-width: 450px; max-height: 300px;">
+                            <video src="video/aboutme.mp4" controls style="width: 100%; max-height: 260px; display: block; object-fit: contain; background: #000;"></video>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-foot">
+                    <span>The Architecture of Intentionality</span>
+                    <span>SYSTEM.BOARDSIDE // ARCADE_CLASSIC</span>
+                </div>
+            </section>
+
+            <!-- Slide 4: Reclaiming Your Cognitive Currency (Dark void) -->
+            <section class="slide" data-label="Cognitive">
+                <div class="starfield"></div>
+                <div class="slide-chrome">
+                    <span>The Energy Audit</span>
+                    <span class="label-pill">04</span>
+                </div>
+                <div class="slide-body">
+                    <div class="left-col">
+                        <span class="label-eyebrow">survival vs. strategy</span>
+                        <h2 class="slide-headline">the energy audit</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                We have a cognitive currency that is a finite resource.
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">Survival mode:</span> [Rent, transit, expenses, minor details]
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">Laser focus:</span> Achieve your dreams
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="right-col">
+                        <div class="qr-card">
+                            <img src="img/mentimeter-01.png" alt="Mentimeter QR Code" class="qr-img">
+                            <div class="qr-meta">
+                                <span class="qr-title">Mentimeter 1</span>
+                                <p class="qr-desc">"What are the top 3 things that consumed your mental energy this past week?"<br><strong>Scan to participate.</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-foot">
+                    <span>The Architecture of Intentionality</span>
+                    <span>SYSTEM.BOARDSIDE // ARCADE_CLASSIC</span>
+                </div>
+            </section>
+
+            <!-- Slide 5: Evolution Without Erasure (Dark void) -->
+            <section class="slide" data-label="Evolution">
+                <div class="starfield"></div>
+                <div class="slide-chrome">
+                    <span>Adapt but don't Blend in</span>
+                    <span class="label-pill">05</span>
+                </div>
+                <div class="slide-body">
+                    <div class="left-col">
+                        <span class="label-eyebrow">identity &amp; strategy</span>
+                        <h2 class="slide-headline">adapt but don't blend in</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-title">What to absorb:</span> Behavior, Rules, Politeness, Workplace Culture
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">What to Keep:</span> Your accent, your past experience, Your heritage
+                            </li>
+                        </ul>
+                        <div class="action-box">
+                            <div class="action-label">Mindset Check</div>
+                            <div class="action-text">"Do things better than the place you came from."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-foot">
+                    <span>The Architecture of Intentionality</span>
+                    <span>SYSTEM.BOARDSIDE // ARCADE_CLASSIC</span>
+                </div>
+            </section>
+
+            <!-- Slide 6: The Strategic 'No' (Lavender Register) -->
+            <section class="slide lavender-register" data-label="Strategic No">
+                <div class="starfield"></div>
+                <span class="catalogue-num">[strategic.06]</span>
+                <div class="slide-body" style="margin-top: 100px;">
+                    <div class="left-col">
+                        <span class="label-eyebrow">energy pruning</span>
+                        <h2 class="slide-headline">the pruning</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-title">The power:</span> Cutting away habits that drain you.
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">Laser Focus Mentality:</span> Top Three Priorities
+                            </li>
+                        </ul>
+                        <div class="action-box">
+                            <div class="action-label">Mindset Check</div>
+                            <div class="action-text">"Intentionality = Stop saying NO to your Canadian dream and start DOING"</div>
+                        </div>
+                    </div>
+                    <div class="right-col">
+                        <div class="qr-card">
+                            <img src="img/mentimeter-01.png" alt="Mentimeter QR Code" class="qr-img">
+                            <div class="qr-meta">
+                                <span class="qr-title">Mentimeter 2</span>
+                                <p class="qr-desc">"What is one thing consuming your energy right now that does not serve your long-term well-being?"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div></div>
+            </section>
+
+            <!-- Slide 7: Designing Your Path (Dark void) -->
+            <section class="slide" data-label="Designing">
+                <div class="starfield"></div>
+                <div class="slide-chrome">
+                    <span>Designing Your Path</span>
+                    <span class="label-pill">07</span>
+                </div>
+                <div class="slide-body">
+                    <div class="left-col">
+                        <span class="label-eyebrow">agency vs. luck</span>
+                        <h2 class="slide-headline">designing your path</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-title">Luck doesn't exist:</span> Intention attracts results
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">Ownership in Networking:</span> Building professional relationships, "add don't subtract"
+                            </li>
+                        </ul>
+                        <div class="action-box">
+                            <div class="action-label">Mindset Check</div>
+                            <div class="action-text">"Non-intentional persons calls it 'Fate' when a door closes. The Intentional person treats it as a challenge, step back and adjust"</div>
+                        </div>
+                    </div>
+                    <div class="right-col" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                        <div class="pixel-card" style="padding: 10px; box-shadow: 6px 6px 0 var(--neon-cyan); border-color: var(--neon-cyan); max-height: 480px; display: flex; align-items: center; justify-content: center;">
+                            <img src="img/laser-focus.jpg" alt="Laser Focus" style="max-height: 440px; width: auto; object-fit: contain; display: block;">
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-foot">
+                    <span>The Architecture of Intentionality</span>
+                    <span>SYSTEM.BOARDSIDE // ARCADE_CLASSIC</span>
+                </div>
+            </section>
+
+            <!-- Slide 8: Claiming Your Power (Dark void) -->
+            <section class="slide" data-label="Claiming Power">
+                <div class="starfield"></div>
+                <div class="slide-chrome">
+                    <span>Claiming your Super Power</span>
+                    <span class="label-pill">08</span>
+                </div>
+                <div class="slide-body">
+                    <div class="left-col">
+                        <span class="label-eyebrow">global advantage</span>
+                        <h2 class="slide-headline">claiming your super power</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-title">The Character:</span> What makes you unique?
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">The Tower:</span> What do you want to achieve?
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">Your Drive:</span> For whom you are doing this?
+                            </li>
+                        </ul>
+                        <div class="action-box">
+                            <div class="action-label">Mindset Check</div>
+                            <div class="action-text">"Don't forget, You are the first person you should be doing this for"</div>
+                        </div>
+                    </div>
+                    <div class="right-col">
+                        <div class="qr-card">
+                            <img src="img/mentimeter-01.png" alt="Mentimeter QR Code" class="qr-img">
+                            <div class="qr-meta">
+                                <span class="qr-title">Mentimeter 3</span>
+                                <p class="qr-desc">"My unique global advantage in the Canadian market is..."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-foot">
+                    <span>The Architecture of Intentionality</span>
+                    <span>SYSTEM.BOARDSIDE // ARCADE_CLASSIC</span>
+                </div>
+            </section>
+
+            <!-- Slide 9: Fueling the Next Move (Dark void) -->
+            <section class="slide" data-label="Fueling">
+                <div class="starfield"></div>
+                <div class="slide-chrome">
+                    <span>Fueling the Next Move</span>
+                    <span class="label-pill">09</span>
+                </div>
+                <div class="slide-body">
+                    <div class="left-col">
+                        <span class="label-eyebrow">momentum &amp; audacity</span>
+                        <h2 class="slide-headline">fueling the next move</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-title">The Debt of Gratitude:</span> Honor the courageous, past version of you that packed those bags and boarded that plane.
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">The Audacity Reserve:</span> Use that same ocean-crossing courage to fuel your daily, deliberate actions here.
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">Refusing Mediocrity:</span> Commit to matching the scale of your initial sacrifice with the scale of your daily execution.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-foot">
+                    <span>The Architecture of Intentionality</span>
+                    <span>SYSTEM.BOARDSIDE // ARCADE_CLASSIC</span>
+                </div>
+            </section>
+
+            <!-- Slide 10: The Ultimate Question (Pink Register) -->
+            <section class="slide pink-register" data-label="Ultimate Question">
+                <div class="starfield"></div>
+                <span class="catalogue-num">[action.10]</span>
+                <div class="slide-body" style="margin-top: 100px;">
+                    <div class="left-col">
+                        <span class="label-eyebrow">next actions</span>
+                        <h2 class="slide-headline">the ultimate question</h2>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-title">The Strategy:</span> What is your next big move?
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">The Focus:</span> Moving from passive observation to high-intent action.
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-title">The Connection:</span> Let’s build together.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="right-col">
+                        <div class="qr-card">
+                            <img src="img/mywebsite-qr.jpeg" alt="Let's Connect QR Code" class="qr-img">
+                            <div class="qr-meta">
+                                <span class="qr-title">Let's Connect</span>
+                                <p class="qr-desc">Scan the QR code to connect and start designing your future together.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div></div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- UI Overlay for controls -->
+    <div class="controls-overlay visible" id="controlsOverlay">
+        <button class="nav-btn" id="prevBtn" title="Previous Slide (Left Arrow)">◀</button>
+        <span id="slideCount">1 / 10</span>
+        <button class="nav-btn" id="nextBtn" title="Next Slide (Right Arrow)">▶</button>
+        <span style="color: var(--neon-cyan); margin-left: 10px;">[Space / Arrow keys to navigate]</span>
+    </div>
+
+    <!-- Hollow square dots rail -->
+    <div class="nav-dots-rail" id="navDotsRail"><div class="nav-dot active" title="Go to slide 1: Cover"></div><div class="nav-dot" title="Go to slide 2: Journey"></div><div class="nav-dot" title="Go to slide 3: Horizon"></div><div class="nav-dot" title="Go to slide 4: Cognitive"></div><div class="nav-dot" title="Go to slide 5: Evolution"></div><div class="nav-dot" title="Go to slide 6: Strategic No"></div><div class="nav-dot" title="Go to slide 7: Designing"></div><div class="nav-dot" title="Go to slide 8: Claiming Power"></div><div class="nav-dot" title="Go to slide 9: Fueling"></div><div class="nav-dot" title="Go to slide 10: Ultimate Question"></div></div>
+
+    <!-- Inline editing elements -->
+    <div class="edit-hotzone"></div>
+    <button class="edit-toggle active" id="editToggle" title="Edit mode (E)">Exit Edit Mode</button>
+    <button class="export-btn" id="exportBtn" title="Export HTML to local file">Export changes</button>
+
+    <script>
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.stage = document.getElementById('deckStage');
+                
+                this.setupStageScale();
+                this.setupKeyboardNav();
+                this.setupClickNav();
+                this.setupOverlayFade();
+                this.setupTouchNav();
+                this.buildDotsRail();
+                this.loadFromStorage();
+                this.showSlide(this.currentSlide);
+            }
+
+            setupStageScale() {
+                const scale = () => {
+                    const targetW = 1920;
+                    const targetH = 1080;
+                    const windowW = window.innerWidth;
+                    const windowH = window.innerHeight;
+                    const factorX = windowW / targetW;
+                    const factorY = windowH / targetH;
+                    const factor = Math.min(factorX, factorY);
+                    
+                    const x = (windowW - targetW * factor) / 2;
+                    const y = (windowH - targetH * factor) / 2;
+                    
+                    this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+                };
+                scale();
+                window.addEventListener('resize', scale);
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.getAttribute('contenteditable') === 'true') {
+                        return;
+                    }
+                    
+                    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                        this.nextSlide();
+                        this.triggerOverlay();
+                    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                        this.prevSlide();
+                        this.triggerOverlay();
+                    } else if (e.key === 'Home') {
+                        this.showSlide(0);
+                        this.triggerOverlay();
+                    } else if (e.key === 'End') {
+                        this.showSlide(this.slides.length - 1);
+                        this.triggerOverlay();
+                    }
+                });
+            }
+
+            setupClickNav() {
+                document.getElementById('prevBtn').addEventListener('click', () => this.prevSlide());
+                document.getElementById('nextBtn').addEventListener('click', () => this.nextSlide());
+            }
+
+            setupTouchNav() {
+                let startX = 0;
+                document.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                });
+                document.addEventListener('touchend', (e) => {
+                    const diffX = e.changedTouches[0].clientX - startX;
+                    if (Math.abs(diffX) > 50) {
+                        if (diffX > 0) {
+                            this.prevSlide();
+                        } else {
+                            this.nextSlide();
+                        }
+                        this.triggerOverlay();
+                    }
+                });
+            }
+
+            buildDotsRail() {
+                const rail = document.getElementById('navDotsRail');
+                this.slides.forEach((slide, index) => {
+                    const dot = document.createElement('div');
+                    dot.className = 'nav-dot';
+                    dot.title = `Go to slide ${index + 1}: ${slide.getAttribute('data-label') || ''}`;
+                    dot.addEventListener('click', () => {
+                        this.showSlide(index);
+                        this.triggerOverlay();
+                    });
+                    rail.appendChild(dot);
+                });
+            }
+
+            setupOverlayFade() {
+                const overlay = document.getElementById('controlsOverlay');
+                let timeout = null;
+                
+                this.triggerOverlay = () => {
+                    overlay.classList.add('visible');
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        overlay.classList.remove('visible');
+                    }, 2500);
+                };
+
+                document.addEventListener('mousemove', this.triggerOverlay);
+                this.triggerOverlay();
+            }
+
+            nextSlide() {
+                if (this.currentSlide < this.slides.length - 1) {
+                    this.showSlide(this.currentSlide + 1);
+                }
+            }
+
+            prevSlide() {
+                if (this.currentSlide > 0) {
+                    this.showSlide(this.currentSlide - 1);
+                }
+            }
+
+            showSlide(index) {
+                this.currentSlide = index;
+                this.slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                document.getElementById('slideCount').textContent = `${index + 1} / ${this.slides.length}`;
+                
+                // Update dots active status
+                const dots = document.querySelectorAll('.nav-dot');
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+            }
+
+            loadFromStorage() {
+                const saved = localStorage.getItem('intentionality_presentation_edits');
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        const editables = document.querySelectorAll('[contenteditable="true"]');
+                        editables.forEach((el, index) => {
+                            if (data[index] !== undefined) {
+                                el.innerHTML = data[index];
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Error loading edits", e);
+                    }
+                }
+            }
+        }
+
+        // Inline Editor Manager
+        class InlineEditor {
+            constructor() {
+                this.isActive = false;
+                this.toggleBtn = document.getElementById('editToggle');
+                this.exportBtn = document.getElementById('exportBtn');
+                this.hotzone = document.querySelector('.edit-hotzone');
+                
+                this.setupHoverControls();
+                this.setupClickControls();
+                this.setupKeyboardShortcut();
+                this.setupAutoSave();
+            }
+
+            setupHoverControls() {
+                let hideTimeout = null;
+                const showControls = () => {
+                    clearTimeout(hideTimeout);
+                    this.toggleBtn.classList.add('show');
+                };
+                const hideControls = () => {
+                    hideTimeout = setTimeout(() => {
+                        if (!this.isActive) this.toggleBtn.classList.remove('show');
+                    }, 400);
+                };
+
+                this.hotzone.addEventListener('mouseenter', showControls);
+                this.hotzone.addEventListener('mouseleave', hideControls);
+                this.toggleBtn.addEventListener('mouseenter', showControls);
+                this.toggleBtn.addEventListener('mouseleave', hideControls);
+                
+                this.hotzone.addEventListener('click', () => this.toggleEditMode());
+            }
+
+            setupClickControls() {
+                this.toggleBtn.addEventListener('click', () => this.toggleEditMode());
+                this.exportBtn.addEventListener('click', () => this.exportHTML());
+            }
+
+            setupKeyboardShortcut() {
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'e' || e.key === 'E') && e.target.getAttribute('contenteditable') !== 'true') {
+                        this.toggleEditMode();
+                    }
+                });
+            }
+
+            toggleEditMode() {
+                this.isActive = !this.isActive;
+                document.body.classList.toggle('edit-mode', this.isActive);
+                this.toggleBtn.classList.toggle('active', this.isActive);
+                
+                if (this.isActive) {
+                    this.toggleBtn.textContent = "Exit Edit Mode";
+                } else {
+                    this.toggleBtn.textContent = "Edit Mode";
+                }
+            }
+
+            setupAutoSave() {
+                const editables = document.querySelectorAll('[contenteditable="true"]');
+                editables.forEach((el) => {
+                    el.addEventListener('input', () => {
+                        this.saveToStorage();
+                    });
+                });
+            }
+
+            saveToStorage() {
+                const editables = document.querySelectorAll('[contenteditable="true"]');
+                const data = Array.from(editables).map(el => el.innerHTML);
+                localStorage.setItem('intentionality_presentation_edits', JSON.stringify(data));
+            }
+
+            exportHTML() {
+                const clone = document.documentElement.cloneNode(true);
+                const docText = "<!DOCTYPE html>\n" + clone.outerHTML;
+                
+                const blob = new Blob([docText], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'presentation_intentionality.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        const presentation = new SlidePresentation();
+        const editor = new InlineEditor();
+    </script>
+
+</body></html>

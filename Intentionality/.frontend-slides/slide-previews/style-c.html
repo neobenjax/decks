@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Architecture of Intentionality - Style C</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewport {
+            position: relative;
+            width: 1920px;
+            height: 1080px;
+            background: #111111; /* Dark protest paper */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 90px;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --dark: #111111;
+            --orange: #E85D26;
+            --cream: #F0ECE5;
+            --cream-muted: #888880;
+        }
+
+        .top-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 18px;
+            color: var(--cream-muted);
+            border-bottom: 1px solid #282826;
+            padding-bottom: 25px;
+        }
+
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .accent-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 20px;
+            color: var(--orange);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 20px;
+        }
+
+        .title-display {
+            font-family: 'Barlow', sans-serif;
+            font-size: 150px;
+            font-weight: 900;
+            line-height: 0.88;
+            color: var(--cream);
+            text-transform: lowercase; /* Broadside signature: lowercase display */
+            margin: 0 0 40px 0;
+            letter-spacing: -0.04em;
+            opacity: 0;
+            transform: translateX(-30px);
+            animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .subtitle {
+            font-family: 'Barlow', sans-serif;
+            font-size: 34px;
+            line-height: 1.45;
+            color: var(--cream-muted);
+            font-weight: 400;
+            max-width: 950px;
+            margin: 0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-top: 1px solid #282826;
+            padding-top: 25px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 18px;
+            color: var(--cream-muted);
+        }
+
+        .footer-highlight {
+            color: var(--orange);
+            font-weight: bold;
+        }
+
+        @keyframes slideInLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewport" id="stage">
+        <div class="top-meta">
+            <span>manifesto series // no. 01</span>
+            <span>2026.06</span>
+        </div>
+        
+        <div class="content-container">
+            <div class="accent-label">deliberate, high-stakes choice</div>
+            <h1 class="title-display">the architecture<br>of intentionality</h1>
+            <p class="subtitle">Constructing your pathway to well-being and career success in Canada.</p>
+        </div>
+
+        <div class="footer">
+            <span>action: planning masterclass</span>
+            <span>focus: <span class="footer-highlight">international post-graduates</span></span>
+        </div>
+    </div>
+
+    <script>
+        function scaleStage() {
+            const stage = document.getElementById('stage');
+            const targetW = 1920;
+            const targetH = 1080;
+            const windowW = window.innerWidth;
+            const windowH = window.innerHeight;
+            const scaleX = windowW / targetW;
+            const scaleY = windowH / targetH;
+            const scale = Math.min(scaleX, scaleY);
+            
+            stage.style.transform = `scale(${scale})`;
+            stage.style.position = 'absolute';
+            stage.style.left = `${(windowW - targetW * scale) / 2}px`;
+            stage.style.top = `${(windowH - targetH * scale) / 2}px`;
+            stage.style.transformOrigin = '0 0';
+        }
+        
+        window.addEventListener('resize', scaleStage);
+        scaleStage();
+    </script>
+</body>
+</html>

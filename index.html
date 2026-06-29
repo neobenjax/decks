@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decks Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Tektur:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #4ad2e6;
+            --navy: #081d33;
+            --navy-light: rgba(8, 29, 51, 0.7);
+            --card-bg: rgba(8, 29, 51, 0.05);
+            --card-hover-bg: rgba(8, 29, 51, 0.08);
+            --yellow: #f4d03f;
+            --pink: #f0a6ca;
+            --cyan-light: #5edcf4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(rgba(8, 29, 51, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(8, 29, 51, 0.08) 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: 'Chakra Petch', sans-serif;
+            color: var(--navy);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Ambient scanlines overlay to match presentation feel */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(8, 29, 51, 0.03) 2px, rgba(8, 29, 51, 0.03) 4px);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .badge {
+            background-color: var(--navy);
+            color: var(--bg-color);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 6px 16px;
+            display: inline-block;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-family: 'Tektur', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--navy);
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 0px var(--bg-color), 2px 2px 0px var(--navy);
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+
+        .subtitle {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            color: var(--navy-light);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(8, 29, 51, 0.25);
+            position: relative;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--navy);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(4px);
+        }
+
+        .card:hover {
+            background-color: var(--card-hover-bg);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(8, 29, 51, 0.15);
+            border-color: rgba(8, 29, 51, 0.4);
+        }
+
+        /* L-Brackets */
+        .card::before, .card::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .card::before {
+            top: -2px;
+            left: -2px;
+            border-top: 4px solid var(--navy);
+            border-left: 4px solid var(--navy);
+        }
+
+        .card::after {
+            bottom: -2px;
+            right: -2px;
+            border-bottom: 4px solid var(--navy);
+            border-right: 4px solid var(--navy);
+        }
+
+        .card:hover::before {
+            top: -5px;
+            left: -5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .card:hover::after {
+            bottom: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Shape Icon Containers & Custom CSS Shapes */
+        .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        /* Shape 1: Overlapping Modular Blocks */
+        .shape-blocks {
+            width: 40px;
+            height: 40px;
+            background-color: var(--navy);
+            position: relative;
+            z-index: 2;
+            transition: transform 0.4s ease;
+        }
+
+        .shape-blocks::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: var(--yellow);
+            top: 6px;
+            left: 6px;
+            z-index: -1;
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover .shape-blocks {
+            transform: translate(-3px, -3px);
+        }
+
+        .card:hover .shape-blocks::after {
+            transform: translate(6px, 6px);
+        }
+
+        /* Shape 2: Rotating Crisp Vectors */
+        .shape-vector {
+            width: 40px;
+            height: 40px;
+            background-color: var(--cyan-light);
+            transform: rotate(45deg);
+            border: 2px solid var(--navy);
+            transition: transform 0.6s ease;
+        }
+
+        .card:hover .shape-vector {
+            transform: rotate(135deg) scale(1.1);
+        }
+
+        /* Shape 3: Live Pink-bordered Box */
+        .shape-live {
+            width: 44px;
+            height: 44px;
+            border: 3px solid var(--pink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.4s ease;
+        }
+
+        .shape-live-inner {
+            width: 24px;
+            height: 24px;
+            background-color: var(--navy);
+            transition: background-color 0.4s ease;
+        }
+
+        .card:hover .shape-live {
+            transform: rotate(90deg);
+        }
+
+        .card:hover .shape-live-inner {
+            background-color: var(--pink);
+        }
+
+        /* Content Styling */
+        .card h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            color: var(--navy);
+            font-family: 'Tektur', sans-serif;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--navy-light);
+            font-weight: 500;
+        }
+
+        footer {
+            margin-top: 60px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--navy-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="badge">System Decks Active</div>
+        <h1>Presentations Portal</h1>
+        <p class="subtitle">Select a presentation to launch</p>
+    </header>
+
+    <div class="grid-container">
+        <!-- Deck 1: Intentionality -->
+        <a href="Intentionality/presentation.html" class="card">
+            <div class="icon-wrapper">
+                <div class="shape-blocks"></div>
+            </div>
+            <h2>Intentionality</h2>
+            <p>The Architecture of Intentionality: Core systems, modular blocks, crisp vectors, and immersive retro environments.</p>
+        </a>
+
+        <!-- Placeholder/Upcoming Deck to complete layout (replicating standard design system) -->
+        <div class="card" style="opacity: 0.7; cursor: not-allowed;" onclick="event.preventDefault();">
+            <div class="icon-wrapper">
+                <div class="shape-vector"></div>
+            </div>
+            <h2>Next Deck</h2>
+            <p>System analysis pending. Add new slide files to list additional presentations in the workspace.</p>
+        </div>
+
+        <!-- Placeholder/Upcoming Deck to complete layout -->
+        <div class="card" style="opacity: 0.7; cursor: not-allowed;" onclick="event.preventDefault();">
+            <div class="icon-wrapper">
+                <div class="shape-live">
+                    <div class="shape-live-inner"></div>
+                </div>
+            </div>
+            <h2>Future Deck</h2>
+            <p>Ready to deploy. Add configurations or HTML files to populate this system module.</p>
+        </div>
+    </div>
+
+    <footer>
+        &bull; Version 1.0.0
+    </footer>
+
+</body>
+</html>

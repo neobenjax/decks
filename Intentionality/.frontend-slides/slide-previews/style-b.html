@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Architecture of Intentionality - Style B</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..800&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewport {
+            position: relative;
+            width: 1920px;
+            height: 1080px;
+            background: #F0EBDE; /* Warm Cream Paper */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 90px;
+            box-sizing: border-box;
+        }
+
+        /* 10% opacity graph paper grid background */
+        .viewport::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(31, 43, 224, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(31, 43, 224, 0.08) 1px, transparent 1px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        :root {
+            --paper: #F0EBDE;
+            --cobalt: #1F2BE0;
+            --cobalt-soft: #5560E5;
+        }
+
+        /* 1.5px cobalt hairline frame */
+        .hairline-frame {
+            position: absolute;
+            left: 90px;
+            right: 90px;
+            top: 60px;
+            bottom: 60px;
+            border-top: 1.5px solid var(--cobalt);
+            border-bottom: 1.5px solid var(--cobalt);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .header-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            margin-top: -10px;
+        }
+
+        .meta-ticker {
+            font-family: 'DM Mono', monospace;
+            font-size: 16px;
+            color: var(--cobalt);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .content-container {
+            display: flex;
+            position: relative;
+            z-index: 3;
+            flex-grow: 1;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .left-col {
+            max-width: 1100px;
+        }
+
+        .title-display {
+            font-family: 'Newsreader', serif;
+            font-size: 130px;
+            font-style: italic;
+            font-weight: 500;
+            line-height: 0.95;
+            color: var(--cobalt);
+            margin: 0 0 35px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .subtitle {
+            font-family: 'Hanken Grotesk', sans-serif;
+            font-size: 28px;
+            line-height: 1.45;
+            color: var(--cobalt);
+            font-weight: 500;
+            max-width: 800px;
+            margin: 0;
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeIn 0.8s ease-out 0.25s forwards;
+        }
+
+        /* Decorative QR block accent */
+        .qr-accent {
+            width: 140px;
+            height: 140px;
+            opacity: 0.15;
+            z-index: 2;
+            color: var(--cobalt);
+            transform: rotate(45deg);
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 3;
+            margin-bottom: -10px;
+        }
+
+        .footer-text {
+            font-family: 'DM Mono', monospace;
+            font-size: 16px;
+            color: var(--cobalt-soft);
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewport" id="stage">
+        <div class="hairline-frame"></div>
+        
+        <div class="header-meta">
+            <span class="meta-ticker">MASTERCLASS // SYSTEM.INTENTIONALITY</span>
+            <span class="meta-ticker">[01]</span>
+        </div>
+        
+        <div class="content-container">
+            <div class="left-col">
+                <h1 class="title-display">The Architecture<br>of Intentionality</h1>
+                <p class="subtitle">Constructing your pathway to well-being and career success in Canada.</p>
+            </div>
+            
+            <!-- Risograph QR grid accent SVG -->
+            <svg class="qr-accent" viewBox="0 0 100 100" fill="currentColor">
+                <rect x="0" y="0" width="20" height="20" />
+                <rect x="40" y="0" width="20" height="20" />
+                <rect x="80" y="0" width="20" height="20" />
+                <rect x="20" y="20" width="20" height="20" />
+                <rect x="60" y="20" width="20" height="20" />
+                <rect x="0" y="40" width="20" height="20" />
+                <rect x="80" y="40" width="20" height="20" />
+                <rect x="20" y="60" width="20" height="20" />
+                <rect x="40" y="80" width="20" height="20" />
+                <rect x="60" y="80" width="20" height="20" />
+            </svg>
+        </div>
+
+        <div class="footer">
+            <span class="footer-text">TARGET: INTERNATIONAL POST-GRADUATE MINDS</span>
+            <span class="footer-text">RUN TIME: 2026</span>
+        </div>
+    </div>
+
+    <script>
+        function scaleStage() {
+            const stage = document.getElementById('stage');
+            const targetW = 1920;
+            const targetH = 1080;
+            const windowW = window.innerWidth;
+            const windowH = window.innerHeight;
+            const scaleX = windowW / targetW;
+            const scaleY = windowH / targetH;
+            const scale = Math.min(scaleX, scaleY);
+            
+            stage.style.transform = `scale(${scale})`;
+            stage.style.position = 'absolute';
+            stage.style.left = `${(windowW - targetW * scale) / 2}px`;
+            stage.style.top = `${(windowH - targetH * scale) / 2}px`;
+            stage.style.transformOrigin = '0 0';
+        }
+        
+        window.addEventListener('resize', scaleStage);
+        scaleStage();
+    </script>
+</body>
+</html>
